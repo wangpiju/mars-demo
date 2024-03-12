@@ -1,6 +1,6 @@
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 
-const queryPositions = async () => {
+const queryUserPositions = async () => {
     //node rpc
     const client = await CosmWasmClient.connect("https://rpc-osmosis.blockapsis.com");
     //Red Bank contract address
@@ -19,5 +19,5 @@ const queryPositions = async () => {
 };
 
 // cron job, execute 1 time per 10 seconds
-setInterval(queryPositions, 10000); // 10 seconds
-queryPositions().catch(console.error);
+setInterval(queryUserPositions, 10000); // 10 seconds
+queryUserPositions().catch(console.error);
