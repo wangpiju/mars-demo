@@ -42,11 +42,24 @@ var decimal_js_1 = require("decimal.js");
 var getAssetPrice = function (asset) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         //const response = await axios.get(`https://api.pricing.com/${asset}`);
-        return [2 /*return*/, new decimal_js_1.default(1.69)];
+        switch (asset) {
+            case Asset.UOSMO:
+                return [2 /*return*/, new decimal_js_1.default(1.69)];
+            case Asset.IBC:
+                return [2 /*return*/, new decimal_js_1.default(70000)];
+            default:
+                return [2 /*return*/, new decimal_js_1.default(0)];
+        }
+        return [2 /*return*/];
     });
 }); };
+var Asset;
+(function (Asset) {
+    Asset[Asset["UOSMO"] = 0] = "UOSMO";
+    Asset[Asset["IBC"] = 1] = "IBC";
+})(Asset || (Asset = {}));
 var calculateCollateralizationRatio = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var rpcEndpoint, contractAddress, client, userAddress, queryMsg, positions, collateralValue, debtValue, ratio, error_1;
+    var rpcEndpoint, contractAddress, client, userAddress, queryCollateralsMsg, queryDebtMsg, collaterals, collateralsAmount, debts, debtsAmount, collateralsPrice, debtsPrice, collateralValue, debtValue, ratio, error_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -56,32 +69,48 @@ var calculateCollateralizationRatio = function () { return __awaiter(void 0, voi
             case 1:
                 client = _a.sent();
                 userAddress = "osmo17fp60d0uuxne7z0lqf3x4a3s390m3qqm5w93xm";
-                queryMsg = { user_position: { user: userAddress } };
+                queryCollateralsMsg = { user_collaterals_v2: { user: userAddress } };
+                queryDebtMsg = { user_debts: { user: userAddress } };
                 _a.label = 2;
             case 2:
-                _a.trys.push([2, 4, , 5]);
-                return [4 /*yield*/, client.queryContractSmart(contractAddress, queryMsg)];
+                _a.trys.push([2, 7, , 8]);
+                return [4 /*yield*/, client.queryContractSmart(contractAddress, queryCollateralsMsg)];
             case 3:
-                positions = _a.sent();
-                console.log(positions);
-                collateralValue = new decimal_js_1.default(positions.total_enabled_collateral / 1000000);
-                debtValue = new decimal_js_1.default(positions.total_collateralized_debt / 1000000);
-                if (debtValue.equals(new decimal_js_1.default(0)) ? 0 : collateralValue.div(debtValue)) {
+                collaterals = _a.sent();
+                collateralsAmount = collaterals.data[0].amount;
+                console.log("collaterals amount: ");
+                console.log(collateralsAmount);
+                return [4 /*yield*/, client.queryContractSmart(contractAddress, queryDebtMsg)];
+            case 4:
+                debts = _a.sent();
+                debtsAmount = debts[0].amount;
+                console.log("debts amount: ");
+                console.log(debtsAmount);
+                return [4 /*yield*/, getAssetPrice(Asset.UOSMO)];
+            case 5:
+                collateralsPrice = _a.sent();
+                return [4 /*yield*/, getAssetPrice(Asset.IBC)];
+            case 6:
+                debtsPrice = _a.sent();
+                collateralValue = new decimal_js_1.default((new decimal_js_1.default(collateralsAmount / 1000000).mul(collateralsPrice)).toFixed(10));
+                debtValue = new decimal_js_1.default((new decimal_js_1.default(debtsAmount / 100000000).mul(debtsPrice)).toFixed(10));
+                console.log("collateralsPrice:", collateralsPrice);
+                console.log("debtsPrice:", debtsPrice);
+                console.log("collateralValue:", collateralValue);
+                console.log("debtValue:", debtValue);
+                console.log("debtValue.equals(new Decimal(0)):  ", debtValue.equals(new decimal_js_1.default(0)));
+                if (debtValue.equals(new decimal_js_1.default(0))) {
                     console.log("Debt value is 0, cannot calculate collateralization ratio.");
                     return [2 /*return*/, 0];
                 }
                 ratio = collateralValue.div(debtValue);
-                // console.log("collateralsPrice:", collateralsPrice);
-                // console.log("debtsPrice:", debtsPrice);
-                console.log("collateralValue:", collateralValue);
-                console.log("debtValue:", debtValue);
                 console.log("Collateralization Ratio:", ratio.toString());
-                return [3 /*break*/, 5];
-            case 4:
+                return [3 /*break*/, 8];
+            case 7:
                 error_1 = _a.sent();
                 console.error("Error calculating collateralization ratio:", error_1);
-                return [3 /*break*/, 5];
-            case 5: return [2 /*return*/];
+                return [3 /*break*/, 8];
+            case 8: return [2 /*return*/];
         }
     });
 }); };
